@@ -4,7 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-abstract class Instruction {}
+abstract class Instruction {
+	
+	abstract void execute(Machine machine);
+}
 
 class LoadConstant extends Instruction {
 	int r;
@@ -13,6 +16,11 @@ class LoadConstant extends Instruction {
 	LoadConstant(int r, int c) {
 		this.r = r;
 		this.c = c;
+	}
+	
+	void execute(Machine machine) {
+		machine.registers[r] = c;
+		machine.pc++;
 	}
 }
 
@@ -24,6 +32,13 @@ class JumpIfZero extends Instruction {
 		this.r = r;
 		this.a = a;
 	}
+	
+	void execute(Machine machine) {
+		if (machine.registers[r] == 0)
+			machine.pc = a;
+		else
+			machine.pc++;
+	}
 }
 
 class Jump extends Instruction {
@@ -32,9 +47,18 @@ class Jump extends Instruction {
 	Jump(int a) {
 		this.a = a;
 	}
+	
+	void execute(Machine machine) {
+		machine.pc = a;
+	}
 }
 
-class Halt extends Instruction{}
+class Halt extends Instruction{
+
+	void execute(Machine machine) {
+		machine.pc = -1;
+	}
+}
 
 class Multiply extends Instruction {
 	int r1;
@@ -44,6 +68,11 @@ class Multiply extends Instruction {
 		this.r1 = r1;
 		this.r2 = r2;
 	}
+	
+	void execute(Machine machine) {
+		machine.registers[r1] *= machine.registers[r2];
+		machine.pc++;
+	}
 }
 
 class Decrement extends Instruction {
@@ -52,35 +81,26 @@ class Decrement extends Instruction {
 	Decrement(int r) {
 		this.r = r;
 	}
+	
+	void execute(Machine machine) {
+		machine.registers[r]--;
+		machine.pc++;
+	}
 }
 
 class Machine {
-	static void execute(int[] registers, Instruction[] instructions) {
-		int pc = 0;
-		for (;;) {
-			Instruction i = instructions[pc]
-;
-			if (i instanceof LoadConstant lc) {
-				registers[lc.r] = lc.c;
-				pc++;
-			} else if (i instanceof JumpIfZero j ) {
-				if (registers[j.r] == 0)
-					pc = j.a;
-				else
-					pc++;
-			} else if (i instanceof Jump j) {
-				pc = j.a;
-			} else if (i instanceof Halt) {
-				break;
-			} else if (i instanceof Multiply m) {
-				registers[m.r1] *= registers[m.r2];
-				pc++;
-			} else if (i instanceof Decrement d) {
-				registers[d.r]--;
-				pc++;
-			}
+	
+	int pc;
+	int[] registers;
+	
+	void execute(int[] registers, Instruction[] instructions) {
+		this.registers = registers;
+		while (0 <= pc) {
+			Instruction instruction = instructions[pc];
+			instruction.execute(this);
 		}
 	}
+	
 }
 
 class MachineTest {
@@ -101,9 +121,8 @@ class MachineTest {
 				new Halt()
 		};
 		int[] registers = {x, y, 0};
-		Machine.execute(registers, program);
+		new Machine().execute(registers, program);
 		return registers[2];
-		
 	}
 
 }
