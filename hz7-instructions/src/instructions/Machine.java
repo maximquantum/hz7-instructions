@@ -88,6 +88,14 @@ class Decrement extends Instruction {
 	}
 }
 
+class Divide extends Instruction {
+	int r1, r2;
+	
+	void execute(Machine machine) {
+		machine.registers[r1] /= machine.registers[r2];
+	}
+}
+
 class Machine {
 	
 	int pc;
